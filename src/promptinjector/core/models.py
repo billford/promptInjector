@@ -28,6 +28,7 @@ class TestStatus(Enum):
     SKIPPED = "skipped"
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class TestCase:
     """A single prompt injection test case."""
@@ -46,6 +47,7 @@ class TestCase:
             self.severity = Severity(self.severity)
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class TestResult:
     """Result of executing a single test case."""
@@ -79,30 +81,37 @@ class TestSuite:
 
     @property
     def total_tests(self) -> int:
+        """Return total number of tests in the suite."""
         return len(self.results)
 
     @property
     def vulnerable_count(self) -> int:
+        """Return count of tests that found vulnerabilities."""
         return sum(1 for r in self.results if r.is_vulnerable)
 
     @property
     def passed_count(self) -> int:
+        """Return count of tests that passed (no vulnerability found)."""
         return sum(1 for r in self.results if r.status == TestStatus.PASSED)
 
     @property
     def failed_count(self) -> int:
+        """Return count of tests that failed or errored."""
         return sum(1 for r in self.results if r.status in (TestStatus.FAILED, TestStatus.ERROR))
 
     @property
     def vulnerability_rate(self) -> float:
+        """Return the percentage of tests that found vulnerabilities."""
         if self.total_tests == 0:
             return 0.0
         return self.vulnerable_count / self.total_tests
 
     def get_by_severity(self, severity: Severity) -> list[TestResult]:
+        """Get vulnerable results filtered by severity level."""
         return [r for r in self.results if r.test_case.severity == severity and r.is_vulnerable]
 
     def get_by_category(self, category: str) -> list[TestResult]:
+        """Get results filtered by category."""
         return [r for r in self.results if r.test_case.category == category]
 
     def to_dict(self) -> dict:

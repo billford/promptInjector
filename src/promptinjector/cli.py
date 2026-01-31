@@ -6,15 +6,13 @@ import sys
 from pathlib import Path
 
 from rich.console import Console
-from rich.live import Live
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from rich.table import Table
 from rich.text import Text
 
 from . import __version__
 from .core.analyzer import ResultAnalyzer
-from .core.models import Severity, TestStatus
+from .core.models import Severity
 from .core.runner import TestRunner
 from .injections.library import InjectionLibrary, InjectionCategory
 from .targets.openai_gpt import OpenAIGPTTarget
@@ -27,7 +25,7 @@ def create_parser() -> argparse.ArgumentParser:
     """Create the argument parser."""
     parser = argparse.ArgumentParser(
         prog="promptinjector",
-        description="Security testing tool for prompt injection vulnerabilities in custom GPTs and Gems",
+        description="Security testing tool for prompt injection vulnerabilities",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -197,6 +195,7 @@ def _add_common_test_args(parser: argparse.ArgumentParser) -> None:
     )
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
 async def run_tests(args: argparse.Namespace) -> int:
     """Execute tests against a target."""
     # Create target based on type
@@ -318,6 +317,7 @@ async def run_tests(args: argparse.Namespace) -> int:
     return 0
 
 
+# pylint: disable=too-many-return-statements
 def list_items(args: argparse.Namespace) -> int:
     """List available tests, categories, or tags."""
     library = InjectionLibrary()
@@ -414,13 +414,13 @@ def main() -> int:
                 return 1
             return asyncio.run(run_tests(args))
 
-        elif args.command == "list":
+        if args.command == "list":
             return list_items(args)
 
     except KeyboardInterrupt:
         console.print("\n[yellow]Aborted by user[/yellow]")
         return 130
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         console.print(f"[red]Error: {e}[/red]")
         return 1
 

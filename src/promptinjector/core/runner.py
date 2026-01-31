@@ -1,7 +1,6 @@
 """Test runner for executing prompt injection tests."""
 
 import asyncio
-import re
 import time
 from datetime import datetime
 from typing import AsyncIterator
@@ -79,6 +78,7 @@ class TestRunner:
                 execution_time=time.time() - start_time,
             )
 
+    # pylint: disable=too-many-locals
     def _analyze_response(
         self, response: str, test_case: TestCase
     ) -> tuple[bool, float, list[str]]:
@@ -223,6 +223,11 @@ class TestRunner:
         Run tests and yield results as they complete.
 
         Useful for CLI progress display.
+
+        Args:
+            categories: Filter by categories (None = all).
+            severity: Filter by minimum severity (None = all).
+            tags: Filter by tags (None = all).
         """
         self._abort = False
         self.library.load()
@@ -240,6 +245,9 @@ class TestRunner:
                 for tc in test_cases
                 if severity_order.index(tc.severity) >= min_index
             ]
+
+        if tags:
+            test_cases = [tc for tc in test_cases if any(t in tc.tags for t in tags)]
 
         for test_case in test_cases:
             if self._abort:

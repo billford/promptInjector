@@ -79,7 +79,7 @@ class GoogleGemTarget(BaseTarget):
             return response.text
 
         except Exception as e:
-            raise TargetError(f"Google AI API error: {e}", original_error=e)
+            raise TargetError(f"Google AI API error: {e}", original_error=e) from e
 
     async def send_single_message(self, message: str) -> str:
         """Send a single message without chat history."""
@@ -92,7 +92,7 @@ class GoogleGemTarget(BaseTarget):
             return response.text
 
         except Exception as e:
-            raise TargetError(f"Google AI API error: {e}", original_error=e)
+            raise TargetError(f"Google AI API error: {e}", original_error=e) from e
 
     async def reset_conversation(self) -> None:
         """Reset the chat session."""

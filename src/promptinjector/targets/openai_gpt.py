@@ -11,9 +11,11 @@ except ImportError:
     AsyncOpenAI = None
 
 
+# pylint: disable=too-many-instance-attributes
 class OpenAIGPTTarget(BaseTarget):
     """Target for testing OpenAI custom GPTs and assistants."""
 
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def __init__(
         self,
         name: str = "openai-gpt",
@@ -90,7 +92,7 @@ class OpenAIGPTTarget(BaseTarget):
             return assistant_message
 
         except Exception as e:
-            raise TargetError(f"OpenAI API error: {e}", original_error=e)
+            raise TargetError(f"OpenAI API error: {e}", original_error=e) from e
 
     async def send_message_assistant(self, message: str) -> str:
         """Send a message using the Assistants API (for testing real Assistants)."""
@@ -138,7 +140,7 @@ class OpenAIGPTTarget(BaseTarget):
         except TargetError:
             raise
         except Exception as e:
-            raise TargetError(f"Assistants API error: {e}", original_error=e)
+            raise TargetError(f"Assistants API error: {e}", original_error=e) from e
 
     async def reset_conversation(self) -> None:
         """Reset conversation history and thread."""
