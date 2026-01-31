@@ -1,6 +1,14 @@
 """Tests for the injection library."""
 
+import sys
+from unittest.mock import MagicMock
+
 import pytest
+
+# Mock google.generativeai before importing promptinjector modules
+sys.modules['google'] = MagicMock()
+sys.modules['google.generativeai'] = MagicMock()
+
 from promptinjector.injections import InjectionLibrary, InjectionCategory
 from promptinjector.core.models import Severity
 
@@ -55,7 +63,7 @@ class TestInjectionLibrary:
         initial_count = library.count
 
         test = library.add_custom_payload(
-            id="custom-test-001",
+            test_id="custom-test-001",
             name="Custom Test",
             payload="Test payload",
             category="custom",

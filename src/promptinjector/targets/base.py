@@ -15,7 +15,6 @@ class BaseTarget(ABC):
     @abstractmethod
     def target_type(self) -> str:
         """Return the type identifier for this target."""
-        pass
 
     @abstractmethod
     async def send_message(self, message: str) -> str:
@@ -31,17 +30,14 @@ class BaseTarget(ABC):
         Raises:
             TargetError: If communication with the target fails.
         """
-        pass
 
     @abstractmethod
     async def reset_conversation(self) -> None:
         """Reset the conversation state if applicable."""
-        pass
 
     @abstractmethod
     def is_configured(self) -> bool:
         """Check if the target is properly configured."""
-        pass
 
     async def __aenter__(self):
         return self
@@ -51,7 +47,6 @@ class BaseTarget(ABC):
 
     async def close(self) -> None:
         """Clean up resources."""
-        pass
 
     def get_info(self) -> dict[str, Any]:
         """Return information about this target."""

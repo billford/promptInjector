@@ -1,8 +1,8 @@
 """Injection payload library management."""
 
-import os
 from enum import Enum
 from pathlib import Path
+import logging
 
 import yaml
 
@@ -63,7 +63,7 @@ class InjectionLibrary:
     def _load_payload_file(self, filepath: Path) -> None:
         """Load a single YAML payload file."""
         try:
-            with open(filepath, "r") as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
             if not data or "payloads" not in data:
@@ -85,8 +85,8 @@ class InjectionLibrary:
                 )
                 self._test_cases[test_case.id] = test_case
 
-        except Exception as e:
-            print(f"Warning: Failed to load {filepath}: {e}")
+        except (yaml.YAMLError, KeyError, ValueError) as e:
+            logging.warning("Failed to load %s: %s", filepath, e)
 
     def get_all(self) -> list[TestCase]:
         """Get all test cases."""
@@ -134,9 +134,10 @@ class InjectionLibrary:
         self.load()
         return len(self._test_cases)
 
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def add_custom_payload(
         self,
-        id: str,
+        test_id: str,
         name: str,
         payload: str,
         category: str = "custom",
@@ -147,7 +148,7 @@ class InjectionLibrary:
     ) -> TestCase:
         """Add a custom payload at runtime."""
         test_case = TestCase(
-            id=id,
+            id=test_id,
             name=name,
             category=category,
             payload=payload,
@@ -156,5 +157,5 @@ class InjectionLibrary:
             detection_patterns=detection_patterns or [],
             tags=tags or ["custom"],
         )
-        self._test_cases[id] = test_case
+        self._test_cases[test_id] = test_case
         return test_case
