@@ -1,0 +1,38 @@
+services:
+  promptinjector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    volumes:
+      # Mount a directory for output files (optional)
+      - ./output:/app/output
+    # Override command as needed, examples:
+    # docker compose run promptinjector --help
+    # docker compose run promptinjector list --categories
+    # docker compose run promptinjector test openai --system-prompt "You are a helpful assistant"
+
+  # Development service with source mounted for live changes
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    volumes:
+      - ./src:/app/src:ro
+      - ./output:/app/output
+    entrypoint: ["python", "-m", "promptinjector.cli"]
+
+  # Run tests
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: ["pytest"]
+    command: ["tests/", "-v"]
+    volumes:
+      - ./tests:/app/tests:ro

@@ -33,6 +33,51 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
+## Docker
+
+Run promptInjector in a container without installing dependencies locally.
+
+### Quick Start with Docker
+
+```bash
+# Build the image
+docker build -t promptinjector .
+
+# Show help
+docker run --rm promptinjector --help
+
+# List available test categories
+docker run --rm promptinjector list --categories
+
+# Run OpenAI tests (pass API key via environment)
+docker run --rm -e OPENAI_API_KEY="your-key" promptinjector \
+  test openai --system-prompt "You are a helpful assistant."
+
+# Run Google tests
+docker run --rm -e GOOGLE_API_KEY="your-key" promptinjector \
+  test google --system-instruction "You are a helpful assistant."
+
+# Save results to a file (mount output directory)
+docker run --rm -e OPENAI_API_KEY="your-key" \
+  -v $(pwd)/output:/app/output promptinjector \
+  test openai --system-prompt "..." -o /app/output/results.json -f json
+```
+
+### Using Docker Compose
+
+```bash
+# Create a .env file with your API keys
+echo "OPENAI_API_KEY=your-key" > .env
+echo "GOOGLE_API_KEY=your-key" >> .env
+
+# Run commands
+docker compose run --rm promptinjector list --categories
+docker compose run --rm promptinjector test openai --system-prompt "..."
+
+# Run tests
+docker compose run --rm test
+```
+
 ## Quick Start
 
 ### Test an OpenAI Custom GPT
