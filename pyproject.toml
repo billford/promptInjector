@@ -60,3 +60,7 @@ select = ["E", "F", "I", "W"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.bandit]
+# Exclude test files from security scanning - assert statements are expected in pytest tests
+exclude_dirs = ["tests"]
