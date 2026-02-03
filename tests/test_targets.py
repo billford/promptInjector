@@ -4,9 +4,10 @@ import sys
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 
-# Mock google.generativeai before importing promptinjector modules
+# Mock google.genai before importing promptinjector modules
 sys.modules['google'] = MagicMock()
-sys.modules['google.generativeai'] = MagicMock()
+sys.modules['google.genai'] = MagicMock()
+sys.modules['google.genai.types'] = MagicMock()
 
 from promptinjector.targets.base import BaseTarget, TargetError
 from promptinjector.targets.openai_gpt import OpenAIGPTTarget
@@ -109,12 +110,12 @@ class TestGoogleGemTarget:
         target = GoogleGemTarget(
             name="test-gem",
             api_key="test-key",
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             system_instruction="You are a test assistant.",
         )
 
         assert target.name == "test-gem"
-        assert target.model_name == "gemini-1.5-flash"
+        assert target.model_name == "gemini-2.0-flash"
         assert target.system_instruction == "You are a test assistant."
         assert target.target_type == "google-gem"
 
@@ -148,12 +149,12 @@ class TestGoogleGemTarget:
         """Test closing the target."""
         target = GoogleGemTarget(api_key="test-key")
         target._chat = MagicMock()
-        target._model = MagicMock()
+        target._client = MagicMock()
 
         await target.close()
 
         assert target._chat is None
-        assert target._model is None
+        assert target._client is None
 
     @pytest.mark.asyncio
     async def test_send_message_not_configured(self):
