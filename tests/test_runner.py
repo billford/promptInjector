@@ -42,6 +42,9 @@ class MockTarget(BaseTarget):
     async def reset_conversation(self) -> None:
         pass
 
+    async def validate_api_key(self) -> None:
+        pass
+
 
 class TestTestRunner:
     """Tests for TestRunner class."""

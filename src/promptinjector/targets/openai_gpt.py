@@ -54,6 +54,32 @@ class OpenAIGPTTarget(BaseTarget):
     def is_configured(self) -> bool:
         return self.api_key is not None and AsyncOpenAI is not None
 
+    async def validate_api_key(self) -> None:
+        """Validate the API key by listing models."""
+        if not self.is_configured():
+            raise TargetError("OpenAI target not configured. Set OPENAI_API_KEY.")
+
+        client = await self._get_client()
+        try:
+            # List models is a lightweight call to validate the API key
+            await client.models.list()
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "invalid" in error_msg or "api key" in error_msg or "authentication" in error_msg:
+                raise TargetError(
+                    "Invalid OpenAI API key. Please check your API key and try again.",
+                    original_error=e,
+                ) from e
+            if "401" in error_msg or "unauthorized" in error_msg:
+                raise TargetError(
+                    "Invalid OpenAI API key. Please check your API key and try again.",
+                    original_error=e,
+                ) from e
+            raise TargetError(
+                f"Failed to validate OpenAI API key: {e}",
+                original_error=e,
+            ) from e
+
     async def _get_client(self) -> "AsyncOpenAI":
         if self._client is None:
             if AsyncOpenAI is None:
