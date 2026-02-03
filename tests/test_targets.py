@@ -101,6 +101,54 @@ class TestOpenAIGPTTarget:
         with pytest.raises(TargetError, match="not configured"):
             await target.send_message("Hello")
 
+    @pytest.mark.asyncio
+    async def test_validate_api_key_not_configured(self):
+        """Test validate_api_key when not configured."""
+        target = OpenAIGPTTarget(api_key=None)
+
+        with pytest.raises(TargetError, match="not configured"):
+            await target.validate_api_key()
+
+    @pytest.mark.asyncio
+    async def test_validate_api_key_success(self):
+        """Test successful API key validation."""
+        target = OpenAIGPTTarget(api_key="test-key")
+
+        mock_client = AsyncMock()
+        mock_client.models.list = AsyncMock(return_value=[])
+        target._client = mock_client
+
+        # Should not raise
+        await target.validate_api_key()
+
+    @pytest.mark.asyncio
+    async def test_validate_api_key_invalid(self):
+        """Test validation with invalid API key."""
+        target = OpenAIGPTTarget(api_key="invalid-key")
+
+        mock_client = AsyncMock()
+        mock_client.models.list = AsyncMock(
+            side_effect=Exception("Invalid API key provided")
+        )
+        target._client = mock_client
+
+        with pytest.raises(TargetError, match="Invalid OpenAI API key"):
+            await target.validate_api_key()
+
+    @pytest.mark.asyncio
+    async def test_validate_api_key_401_error(self):
+        """Test validation with 401 unauthorized error."""
+        target = OpenAIGPTTarget(api_key="invalid-key")
+
+        mock_client = AsyncMock()
+        mock_client.models.list = AsyncMock(
+            side_effect=Exception("Error code: 401 Unauthorized")
+        )
+        target._client = mock_client
+
+        with pytest.raises(TargetError, match="Invalid OpenAI API key"):
+            await target.validate_api_key()
+
 
 class TestGoogleGemTarget:
     """Tests for Google Gem target."""
@@ -163,6 +211,50 @@ class TestGoogleGemTarget:
 
         with pytest.raises(TargetError, match="not configured"):
             await target.send_message("Hello")
+
+    @pytest.mark.asyncio
+    async def test_validate_api_key_not_configured(self):
+        """Test validate_api_key when not configured."""
+        target = GoogleGemTarget(api_key=None)
+
+        with pytest.raises(TargetError, match="not configured"):
+            await target.validate_api_key()
+
+    @pytest.mark.asyncio
+    async def test_validate_api_key_success(self):
+        """Test successful API key validation."""
+        target = GoogleGemTarget(api_key="test-key")
+
+        mock_client = MagicMock()
+        mock_client.models.list.return_value = []
+        target._client = mock_client
+
+        # Should not raise
+        await target.validate_api_key()
+
+    @pytest.mark.asyncio
+    async def test_validate_api_key_invalid(self):
+        """Test validation with invalid API key."""
+        target = GoogleGemTarget(api_key="invalid-key")
+
+        mock_client = MagicMock()
+        mock_client.models.list.side_effect = Exception("Invalid API key provided")
+        target._client = mock_client
+
+        with pytest.raises(TargetError, match="Invalid Google API key"):
+            await target.validate_api_key()
+
+    @pytest.mark.asyncio
+    async def test_validate_api_key_403_error(self):
+        """Test validation with 403 forbidden error."""
+        target = GoogleGemTarget(api_key="invalid-key")
+
+        mock_client = MagicMock()
+        mock_client.models.list.side_effect = Exception("403 Forbidden: API key invalid")
+        target._client = mock_client
+
+        with pytest.raises(TargetError, match="Invalid Google API key"):
+            await target.validate_api_key()
 
 
 class TestBaseTargetContextManager:

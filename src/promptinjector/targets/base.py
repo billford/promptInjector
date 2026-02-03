@@ -39,6 +39,15 @@ class BaseTarget(ABC):
     def is_configured(self) -> bool:
         """Check if the target is properly configured."""
 
+    @abstractmethod
+    async def validate_api_key(self) -> None:
+        """
+        Validate that the API key is valid by making a minimal API call.
+
+        Raises:
+            TargetError: If the API key is invalid or validation fails.
+        """
+
     async def __aenter__(self):
         return self
 

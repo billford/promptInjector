@@ -47,6 +47,32 @@ class GoogleGemTarget(BaseTarget):
     def is_configured(self) -> bool:
         return self.api_key is not None and genai is not None
 
+    async def validate_api_key(self) -> None:
+        """Validate the API key by listing models."""
+        if not self.is_configured():
+            raise TargetError("Google target not configured. Set GEMINI_API_KEY.")
+
+        try:
+            client = self._get_client()
+            # List models is a lightweight call to validate the API key
+            list(client.models.list())
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "invalid" in error_msg or "api key" in error_msg or "api_key" in error_msg:
+                raise TargetError(
+                    "Invalid Google API key. Please check your API key and try again.",
+                    original_error=e,
+                ) from e
+            if "401" in error_msg or "403" in error_msg or "unauthorized" in error_msg:
+                raise TargetError(
+                    "Invalid Google API key. Please check your API key and try again.",
+                    original_error=e,
+                ) from e
+            raise TargetError(
+                f"Failed to validate Google API key: {e}",
+                original_error=e,
+            ) from e
+
     def _get_client(self):
         if self._client is None:
             if genai is None:

@@ -17,6 +17,7 @@ from .core.runner import TestRunner
 from .injections.library import InjectionLibrary, InjectionCategory
 from .targets.openai_gpt import OpenAIGPTTarget
 from .targets.google_gem import GoogleGemTarget
+from .targets.base import TargetError
 
 console = Console()
 
@@ -230,6 +231,15 @@ async def run_tests(args: argparse.Namespace) -> int:
     if not target.is_configured():
         console.print(f"[red]Error: {args.target_type} target not configured.[/red]")
         console.print("Set the appropriate API key environment variable or use --api-key")
+        return 1
+
+    # Validate API key before running tests
+    if not args.quiet:
+        console.print("Validating API key...")
+    try:
+        await target.validate_api_key()
+    except TargetError as e:
+        console.print(f"[red]Error: {e}[/red]")
         return 1
 
     # Create library
