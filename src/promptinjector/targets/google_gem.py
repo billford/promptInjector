@@ -6,9 +6,11 @@ from typing import Any
 from .base import BaseTarget, TargetError
 
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 except ImportError:
     genai = None
+    types = None
 
 
 class GoogleGemTarget(BaseTarget):
@@ -18,7 +20,7 @@ class GoogleGemTarget(BaseTarget):
         self,
         name: str = "google-gem",
         api_key: str | None = None,
-        model: str = "gemini-1.5-flash",
+        model: str = "gemini-2.0-flash",
         system_instruction: str | None = None,
     ):
         """
@@ -26,16 +28,16 @@ class GoogleGemTarget(BaseTarget):
 
         Args:
             name: Friendly name for this target.
-            api_key: Google AI API key. Falls back to GOOGLE_API_KEY env var.
-            model: Model to use (default: gemini-1.5-flash).
+            api_key: Google AI API key. Falls back to GEMINI_API_KEY or GOOGLE_API_KEY env var.
+            model: Model to use (default: gemini-2.0-flash).
             system_instruction: System instruction to simulate a custom Gem.
         """
         super().__init__(name)
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         self.model_name = model
         self.system_instruction = system_instruction
 
-        self._model = None
+        self._client = None
         self._chat = None
 
     @property
@@ -45,36 +47,36 @@ class GoogleGemTarget(BaseTarget):
     def is_configured(self) -> bool:
         return self.api_key is not None and genai is not None
 
-    def _get_model(self):
-        if self._model is None:
+    def _get_client(self):
+        if self._client is None:
             if genai is None:
                 raise TargetError(
-                    "google-generativeai package not installed. "
-                    "Run: pip install google-generativeai"
+                    "google-genai package not installed. "
+                    "Run: pip install google-genai"
                 )
-            genai.configure(api_key=self.api_key)
+            self._client = genai.Client(api_key=self.api_key)
+        return self._client
 
-            kwargs = {}
-            if self.system_instruction:
-                kwargs["system_instruction"] = self.system_instruction
-
-            self._model = genai.GenerativeModel(self.model_name, **kwargs)
-        return self._model
+    def _get_config(self):
+        """Get GenerateContentConfig with system instruction if set."""
+        if self.system_instruction:
+            return types.GenerateContentConfig(system_instruction=self.system_instruction)
+        return None
 
     def _get_chat(self):
         if self._chat is None:
-            model = self._get_model()
-            self._chat = model.start_chat(history=[])
+            client = self._get_client()
+            config = self._get_config()
+            self._chat = client.chats.create(model=self.model_name, config=config)
         return self._chat
 
     async def send_message(self, message: str) -> str:
         """Send a message to the Gemini model."""
         if not self.is_configured():
-            raise TargetError("Google target not configured. Set GOOGLE_API_KEY.")
+            raise TargetError("Google target not configured. Set GEMINI_API_KEY.")
 
         try:
             chat = self._get_chat()
-            # google-generativeai uses sync API, wrap it
             response = chat.send_message(message)
             return response.text
 
@@ -84,11 +86,14 @@ class GoogleGemTarget(BaseTarget):
     async def send_single_message(self, message: str) -> str:
         """Send a single message without chat history."""
         if not self.is_configured():
-            raise TargetError("Google target not configured. Set GOOGLE_API_KEY.")
+            raise TargetError("Google target not configured. Set GEMINI_API_KEY.")
 
         try:
-            model = self._get_model()
-            response = model.generate_content(message)
+            client = self._get_client()
+            config = self._get_config()
+            response = client.models.generate_content(
+                model=self.model_name, contents=message, config=config
+            )
             return response.text
 
         except Exception as e:
@@ -101,7 +106,7 @@ class GoogleGemTarget(BaseTarget):
     async def close(self) -> None:
         """Clean up resources."""
         self._chat = None
-        self._model = None
+        self._client = None
 
     def get_info(self) -> dict[str, Any]:
         info = super().get_info()

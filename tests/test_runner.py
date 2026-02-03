@@ -4,9 +4,10 @@ import sys
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-# Mock google.generativeai before importing promptinjector modules
+# Mock google.genai before importing promptinjector modules
 sys.modules['google'] = MagicMock()
-sys.modules['google.generativeai'] = MagicMock()
+sys.modules['google.genai'] = MagicMock()
+sys.modules['google.genai.types'] = MagicMock()
 
 from promptinjector.core.runner import TestRunner
 from promptinjector.core.models import Severity, TestCase, TestStatus

@@ -5,9 +5,10 @@ import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
 
-# Mock google.generativeai before importing promptinjector modules
+# Mock google.genai before importing promptinjector modules
 sys.modules['google'] = MagicMock()
-sys.modules['google.generativeai'] = MagicMock()
+sys.modules['google.genai'] = MagicMock()
+sys.modules['google.genai.types'] = MagicMock()
 
 from promptinjector.core.models import (
     Severity,
